@@ -144,12 +144,16 @@ async def on_message(message):
             if data.get("users"):
                 user = data["users"][0]
                 quaver_id = user["id"]
+                avatar_url = user.get("avatar_url")  # 假設 API 返回的頭像欄位是 "avatar"
                 last_searched_id[str(message.author.id)] = quaver_id
                 embed = discord.Embed(
                     title=f"✅ {username} 的 Quaver 資訊",
                     description=f"Quaver ID: **{quaver_id}**",
                     color=discord.Color.blue()
                 )
+                # 如果有頭像 URL，設置為縮圖
+                if avatar_url:
+                    embed.set_thumbnail(url=avatar_url)
                 embed.set_footer(text="輸入 !link 可直接連結此 ID")
                 await message.channel.send(embed=embed)
             else:
