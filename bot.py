@@ -27,7 +27,7 @@ def save_user_mappings(mappings):
         json.dump(mappings, file)
 
 user_mappings = load_user_mappings()
-last_searched_id = {}  # 改為儲存最後查詢的 Quaver ID
+last_searched_id = {}
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -46,11 +46,16 @@ async def on_message(message):
 
     if message.content.startswith("!link"):
         parts = message.content.split(" ")
-        if len(parts) < 2:  # 如果沒有指定參數
+        if len(parts) < 2:
             if str(message.author.id) in last_searched_id:
                 quaver_id = last_searched_id[str(message.author.id)]
             else:
-                await message.channel.send("❌ **請先使用 !quaver 查詢一個用戶**，或直接指定 username，例如：`!link Cookiezi`")
+                embed = discord.Embed(
+                    title="❌ 連結失敗",
+                    description="請先使用 `!quaver` 查詢一個用戶，或直接指定 username，例如：`!link Cookiezi`",
+                    color=discord.Color.red()
+                )
+                await message.channel.send(embed=embed)
                 return
         else:
             username = parts[1]
@@ -61,25 +66,50 @@ async def on_message(message):
                 if data.get("users"):
                     quaver_id = data["users"][0]["id"]
                 else:
-                    await message.channel.send(f"❌ Couldn't find Quaver user **{username}**")
+                    embed = discord.Embed(
+                        title="❌ 用戶未找到",
+                        description=f"找不到 Quaver 用戶 **{username}**",
+                        color=discord.Color.red()
+                    )
+                    await message.channel.send(embed=embed)
                     return
             except requests.exceptions.RequestException as e:
-                await message.channel.send("❌ API request failed, please try again later")
+                embed = discord.Embed(
+                    title="❌ API 錯誤",
+                    description="API 請求失敗，請稍後再試",
+                    color=discord.Color.red()
+                )
+                await message.channel.send(embed=embed)
                 print(f"API Error: {e}")
                 return
 
         user_mappings[str(message.author.id)] = quaver_id
         save_user_mappings(user_mappings)
-        await message.channel.send(f"✅ **{message.author.name}** linked to Quaver ID **{quaver_id}**")
+        embed = discord.Embed(
+            title="✅ 連結成功",
+            description=f"**{message.author.name}** 已連結到 Quaver ID **{quaver_id}**",
+            color=discord.Color.green()
+        )
+        await message.channel.send(embed=embed)
         return
 
     if message.content.startswith("!unlink"):
         if str(message.author.id) in user_mappings:
             del user_mappings[str(message.author.id)]
             save_user_mappings(user_mappings)
-            await message.channel.send(f"✅ **{message.author.name}** Quaver user unlinked")
+            embed = discord.Embed(
+                title="✅ 解除連結",
+                description=f"**{message.author.name}** 的 Quaver 連結已解除",
+                color=discord.Color.green()
+            )
+            await message.channel.send(embed=embed)
         else:
-            await message.channel.send("❌ **You haven't linked a Quaver user yet**")
+            embed = discord.Embed(
+                title="❌ 未連結",
+                description="您尚未連結任何 Quaver 用戶",
+                color=discord.Color.red()
+            )
+            await message.channel.send(embed=embed)
         return
 
     if message.content.startswith("!quaver"):
@@ -88,10 +118,20 @@ async def on_message(message):
         if len(parts) < 2:
             if str(message.author.id) in user_mappings:
                 quaver_id = user_mappings[str(message.author.id)]
-                await message.channel.send(f"✅ Your linked Quaver ID:\n{quaver_id}")
+                embed = discord.Embed(
+                    title="✅ 已連結的 Quaver ID",
+                    description=f"您的 Quaver ID：**{quaver_id}**",
+                    color=discord.Color.blue()
+                )
+                await message.channel.send(embed=embed)
                 return
             else:
-                await message.channel.send("❌ **Please enter a Quaver username**, e.g.: `!quaver Cookiezi`")
+                embed = discord.Embed(
+                    title="❌ 缺少參數",
+                    description="請輸入 Quaver 用戶名，例如：`!quaver Cookiezi`",
+                    color=discord.Color.red()
+                )
+                await message.channel.send(embed=embed)
                 return
         else:
             username = parts[1]
@@ -104,13 +144,28 @@ async def on_message(message):
             if data.get("users"):
                 user = data["users"][0]
                 quaver_id = user["id"]
-                # 儲存最後查詢的 Quaver ID
                 last_searched_id[str(message.author.id)] = quaver_id
-                await message.channel.send(f"✅ **{username}**'s Quaver ID:\n{quaver_id}")
+                embed = discord.Embed(
+                    title=f"✅ {username} 的 Quaver 資訊",
+                    description=f"Quaver ID: **{quaver_id}**",
+                    color=discord.Color.blue()
+                )
+                embed.set_footer(text="輸入 !link 可直接連結此 ID")
+                await message.channel.send(embed=embed)
             else:
-                await message.channel.send(f"❌ Couldn't find Quaver stats for **{username}**")
+                embed = discord.Embed(
+                    title="❌ 用戶未找到",
+                    description=f"找不到 **{username}** 的 Quaver 資料",
+                    color=discord.Color.red()
+                )
+                await message.channel.send(embed=embed)
         except requests.exceptions.RequestException as e:
-            await message.channel.send("❌ API request failed, please try again later")
+            embed = discord.Embed(
+                title="❌ API 錯誤",
+                description="API 請求失敗，請稍後再試",
+                color=discord.Color.red()
+            )
+            await message.channel.send(embed=embed)
             print(f"API Error: {e}")
 
 client.run(TOKEN)
