@@ -115,16 +115,32 @@ async def on_message(message):
     if message.content.startswith("!quaver"):
         print(f"Command: !quaver triggered")
         parts = message.content.split(" ")
-        if len(parts) < 2:
+        if len(parts) < 2:  # No username provided
             if str(message.author.id) in user_mappings:
                 quaver_id = user_mappings[str(message.author.id)]
-                embed = discord.Embed(
-                    title="✅ 已連結的 Quaver ID",
-                    description=f"您的 Quaver ID：**{quaver_id}**",
-                    color=discord.Color.blue()
-                )
-                await message.channel.send(embed=embed)
-                return
+                # Fetch user data using the stored quaver_id
+                try:
+                    response = requests.get(API_URL_FULL + str(quaver_id))
+                    response.raise_for_status()
+                    data = response.json()
+                    user = data.get("user", {})
+                    avatar_url = user.get("avatar_url")
+                    embed = discord.Embed(
+                        title=f"✅ {user.get('username', 'Unknown')} 的 Quaver 資訊",
+                        description=f"您的 Quaver ID：**{quaver_id}**",
+                        color=discord.Color.blue()
+                    )
+                    if avatar_url:
+                        embed.set_thumbnail(url=avatar_url)
+                    await message.channel.send(embed=embed)
+                except requests.exceptions.RequestException as e:
+                    embed = discord.Embed(
+                        title="❌ API 錯誤",
+                        description="API 請求失敗，請稍後再試",
+                        color=discord.Color.red()
+                    )
+                    await message.channel.send(embed=embed)
+                    print(f"API Error: {e}")
             else:
                 embed = discord.Embed(
                     title="❌ 缺少參數",
@@ -132,44 +148,41 @@ async def on_message(message):
                     color=discord.Color.red()
                 )
                 await message.channel.send(embed=embed)
-                return
-        else:
+        else:  # Username provided
             username = parts[1]
-
-        try:
-            response = requests.get(API_URL_SEARCH + username)
-            response.raise_for_status()
-            data = response.json()
-            
-            if data.get("users"):
-                user = data["users"][0]
-                quaver_id = user["id"]
-                avatar_url = user.get("avatar_url")  # 假設 API 返回的頭像欄位是 "avatar"
-                last_searched_id[str(message.author.id)] = quaver_id
+            try:
+                response = requests.get(API_URL_SEARCH + username)
+                response.raise_for_status()
+                data = response.json()
+                if data.get("users"):
+                    user = data["users"][0]
+                    quaver_id = user["id"]
+                    avatar_url = user.get("avatar_url")
+                    last_searched_id[str(message.author.id)] = quaver_id
+                    embed = discord.Embed(
+                        title=f"✅ {username} 的 Quaver 資訊",
+                        description=f"Quaver ID: **{quaver_id}**",
+                        color=discord.Color.blue()
+                    )
+# 如果有頭像 URL，設置為縮圖
+                    if avatar_url:
+                        embed.set_thumbnail(url=avatar_url)
+                    embed.set_footer(text="輸入 !link 可直接連結此 ID")
+                    await message.channel.send(embed=embed)
+                else:
+                    embed = discord.Embed(
+                        title="❌ 用戶未找到",
+                        description=f"找不到 **{username}** 的 Quaver 資料",
+                        color=discord.Color.red()
+                    )
+                    await message.channel.send(embed=embed)
+            except requests.exceptions.RequestException as e:
                 embed = discord.Embed(
-                    title=f"✅ {username} 的 Quaver 資訊",
-                    description=f"Quaver ID: **{quaver_id}**",
-                    color=discord.Color.blue()
-                )
-                # 如果有頭像 URL，設置為縮圖
-                if avatar_url:
-                    embed.set_thumbnail(url=avatar_url)
-                embed.set_footer(text="輸入 !link 可直接連結此 ID")
-                await message.channel.send(embed=embed)
-            else:
-                embed = discord.Embed(
-                    title="❌ 用戶未找到",
-                    description=f"找不到 **{username}** 的 Quaver 資料",
+                    title="❌ API 錯誤",
+                    description="API 請求失敗，請稍後再試",
                     color=discord.Color.red()
                 )
                 await message.channel.send(embed=embed)
-        except requests.exceptions.RequestException as e:
-            embed = discord.Embed(
-                title="❌ API 錯誤",
-                description="API 請求失敗，請稍後再試",
-                color=discord.Color.red()
-            )
-            await message.channel.send(embed=embed)
-            print(f"API Error: {e}")
+                print(f"API Error: {e}")
 
 client.run(TOKEN)
