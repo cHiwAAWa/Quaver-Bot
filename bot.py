@@ -36,6 +36,9 @@ client = discord.Client(intents=intents)
 @client.event
 async def on_ready():
     print(f'✅ Bot logged in as {client.user}')
+    # Set the bot's activity to "Playing Quaver"
+    activity = discord.Game(name="Quaver")
+    await client.change_presence(status=discord.Status.online, activity=activity)
 
 @client.event
 async def on_message(message):
