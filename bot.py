@@ -54,8 +54,8 @@ async def on_message(message):
                 quaver_id = last_searched_id[str(message.author.id)]
             else:
                 embed = discord.Embed(
-                    title="❌ 連結失敗",
-                    description="請先使用 `!quaver` 查詢一個用戶，或直接指定 username，例如：`!link Cookiezi`",
+                    title="❌ Link failed",
+                    description="Please use '!quaver' to look up a user first, or directly specify a username, for example: '!link Cookiezi'",
                     color=discord.Color.red()
                 )
                 await message.channel.send(embed=embed)
@@ -70,16 +70,16 @@ async def on_message(message):
                     quaver_id = data["users"][0]["id"]
                 else:
                     embed = discord.Embed(
-                        title="❌ 用戶未找到",
-                        description=f"找不到 Quaver 用戶 **{username}**",
+                        title="❌ User not found",
+                        description=f"Quaver player not found **{username}**",
                         color=discord.Color.red()
                     )
                     await message.channel.send(embed=embed)
                     return
             except requests.exceptions.RequestException as e:
                 embed = discord.Embed(
-                    title="❌ API 錯誤",
-                    description="API 請求失敗，請稍後再試",
+                    title="❌ API error",
+                    description="API request failed, please try again later",
                     color=discord.Color.red()
                 )
                 await message.channel.send(embed=embed)
@@ -89,8 +89,8 @@ async def on_message(message):
         user_mappings[str(message.author.id)] = quaver_id
         save_user_mappings(user_mappings)
         embed = discord.Embed(
-            title="✅ 連結成功",
-            description=f"**{message.author.name}** 已連結到 Quaver ID **{quaver_id}**",
+            title="✅ Link success",
+            description=f"**{message.author.name}** linked to **{quaver_id}**",
             color=discord.Color.green()
         )
         await message.channel.send(embed=embed)
@@ -101,15 +101,15 @@ async def on_message(message):
             del user_mappings[str(message.author.id)]
             save_user_mappings(user_mappings)
             embed = discord.Embed(
-                title="✅ 解除連結",
-                description=f"**{message.author.name}** 的 Quaver 連結已解除",
+                title="✅ Unlink success",
+                description=f"**{message.author.name}**'s Quaver ID unlinked",
                 color=discord.Color.green()
             )
             await message.channel.send(embed=embed)
         else:
             embed = discord.Embed(
-                title="❌ 未連結",
-                description="您尚未連結任何 Quaver 用戶",
+                title="❌ Not linked",
+                description="You have not linked any Quaver user",
                 color=discord.Color.red()
             )
             await message.channel.send(embed=embed)
@@ -129,8 +129,8 @@ async def on_message(message):
                     user = data.get("user", {})
                     avatar_url = user.get("avatar_url")
                     embed = discord.Embed(
-                        title=f"✅ {user.get('username', 'Unknown')} 的 Quaver 資訊",
-                        description=f"您的 Quaver ID：**{quaver_id}**",
+                        title=f"✅ Quaver Info for {user.get('username', 'Unknown')}",
+                        description=f"Your Quaver ID: **{quaver_id}**",
                         color=discord.Color.blue()
                     )
                     if avatar_url:
@@ -138,16 +138,16 @@ async def on_message(message):
                     await message.channel.send(embed=embed)
                 except requests.exceptions.RequestException as e:
                     embed = discord.Embed(
-                        title="❌ API 錯誤",
-                        description="API 請求失敗，請稍後再試",
+                        title="❌ API error",
+                        description="API request failed, please try again later",
                         color=discord.Color.red()
                     )
                     await message.channel.send(embed=embed)
                     print(f"API Error: {e}")
             else:
                 embed = discord.Embed(
-                    title="❌ 缺少參數",
-                    description="請輸入 Quaver 用戶名，例如：`!quaver Cookiezi`",
+                    title="❌ Missing parameter",
+                    description="Please enter a Quaver username, for example: `!quaver Cookiezi`",
                     color=discord.Color.red()
                 )
                 await message.channel.send(embed=embed)
@@ -163,26 +163,26 @@ async def on_message(message):
                     avatar_url = user.get("avatar_url")
                     last_searched_id[str(message.author.id)] = quaver_id
                     embed = discord.Embed(
-                        title=f"✅ {username} 的 Quaver 資訊",
+                        title=f"✅ Quaver Info for {username}",
                         description=f"Quaver ID: **{quaver_id}**",
                         color=discord.Color.blue()
                     )
-# 如果有頭像 URL，設置為縮圖
+                    # If there is an avatar URL, set it as a thumbnail
                     if avatar_url:
                         embed.set_thumbnail(url=avatar_url)
-                    embed.set_footer(text="輸入 !link 可直接連結此 ID")
+                    embed.set_footer(text="Use !link to directly link this ID")
                     await message.channel.send(embed=embed)
                 else:
                     embed = discord.Embed(
-                        title="❌ 用戶未找到",
-                        description=f"找不到 **{username}** 的 Quaver 資料",
+                        title="❌ User not found",
+                        description=f"Could not find Quaver data for **{username}**",
                         color=discord.Color.red()
                     )
                     await message.channel.send(embed=embed)
             except requests.exceptions.RequestException as e:
                 embed = discord.Embed(
-                    title="❌ API 錯誤",
-                    description="API 請求失敗，請稍後再試",
+                    title="❌ API error",
+                    description="API request failed, please try again later",
                     color=discord.Color.red()
                 )
                 await message.channel.send(embed=embed)
