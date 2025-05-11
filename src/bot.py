@@ -1,22 +1,10 @@
 import discord
 import os
-import json
 import requests
 from dotenv import load_dotenv
+from user import load_user_mappings, save_user_mappings
 from quaver import handle_quaver_command
 from rc import handle_rc_command
-
-
-def load_user_mappings():
-    if os.path.exists(USER_MAPPINGS_FILE):
-        with open(USER_MAPPINGS_FILE, "r") as file:
-            return json.load(file)
-    return {}
-
-
-def save_user_mappings(mappings):
-    with open(USER_MAPPINGS_FILE, "w") as file:
-        json.dump(mappings, file)
 
 
 # Define the client object here
@@ -53,8 +41,6 @@ if __name__ == "__main__":
         print("✅ Token successfully loaded")
     else:
         print("❌ Token failed to load, please check .env file")
-
-    USER_MAPPINGS_FILE = "data/user_mappings.json"
 
     user_mappings = load_user_mappings()
     last_searched_id = {}
