@@ -41,7 +41,8 @@ async def on_message(message):
         await handle_quaver_command(message, user_mappings, last_searched_id)
 
     if message.content.startswith("!rc"):
-        await handle_rc_command(message)
+        user_id = user_mappings.get(str(message.author.id))
+        await handle_rc_command(message, user_id, mode=2)
 
 
 if __name__ == "__main__":
