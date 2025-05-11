@@ -3,3 +3,4 @@ functions.md
 user_mappings.json
 
 __pycache__/
+.venv/
